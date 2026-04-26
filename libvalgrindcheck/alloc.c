@@ -59,7 +59,8 @@ static int alloc_should_fail() {
             write(2, "valgrindcheck could not open file: ", strlen("valgrindcheck could not open file: "));
             write(2, strerror(errno), strlen(strerror(errno)));
         }
-        write(fd, &should_fail_at, sizeof(should_fail_at));
+        int tmp = should_fail_at + 1;
+        write(fd, &tmp, sizeof(should_fail_at));
         close(fd);
     }
 
