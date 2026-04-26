@@ -16,12 +16,24 @@
 #define STRINGIFY(exp) #exp
 #define VALGRINDCHECK_ALLOC_FILENAME_STR STRINGIFY(VALGRINDCHECK_ALLOC_FILENAME)
 
+static int load_from_env(int *should_fail_at) {
+    const char *load_from_env = getenv("VALGRINDCHECK_FAIL_AT");
+
+    if (load_from_env) {
+        *should_fail_at = atoi(load_from_env);
+        return 1;
+    }
+
+    return 0;
+}
+
 static int alloc_should_fail() {
     static int should_fail_at = -1;
     static int counter = 0;
 
-    if (should_fail_at == -1) {
+    if (should_fail_at == -1 && !load_from_env(&should_fail_at)) {
         struct stat st;
+
         if (stat(VALGRINDCHECK_ALLOC_FILENAME_STR, &st)) {
             perror("valgrindcheck could not stat file: " VALGRINDCHECK_ALLOC_FILENAME_STR);
             should_fail_at = 0;
