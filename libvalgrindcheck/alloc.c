@@ -4,10 +4,12 @@
 
 #include "alloc.h"
 
-#include <stdio.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <stdlib.h>
-#include <valgrind/memcheck.h>
+#include <string.h>
+#include <unistd.h>
 
 #ifndef VALGRINDCHECK_ALLOC_FILENAME
 #define VALGRINDCHECK_ALLOC_FILENAME alloc.valgrindcheck
@@ -35,25 +37,30 @@ static int alloc_should_fail() {
         struct stat st;
 
         if (stat(VALGRINDCHECK_ALLOC_FILENAME_STR, &st)) {
-            perror("valgrindcheck could not stat file: " VALGRINDCHECK_ALLOC_FILENAME_STR);
+            write(2, "valgrindcheck could not stat file: " VALGRINDCHECK_ALLOC_FILENAME_STR, strlen("valgrindcheck could not stat file: ") + strlen(VALGRINDCHECK_ALLOC_FILENAME_STR));
             should_fail_at = 0;
         } else {
-            FILE *file = fopen(VALGRINDCHECK_ALLOC_FILENAME_STR, "r");
-            if (!file) {
-                perror("valgrindcheck could not open file: ");
-            }
-
-            if (fscanf(file, "%d", &should_fail_at) != 1) {
+            int fd = open(VALGRINDCHECK_ALLOC_FILENAME_STR, O_RDONLY);
+            if (fd < 0) {
+                const char *err = strerror(errno);
+                write(2, "valgrindcheck could not open file: ", strlen("valgrindcheck could not open file: "));
+                write(2, err, strlen(err));
                 should_fail_at = 0;
             }
-            fclose(file);
+
+            if (read(fd, &should_fail_at, sizeof(should_fail_at)) != sizeof(should_fail_at)) {
+                should_fail_at = 0;
+            }
+            close(fd);
         }
 
-        FILE *file = fopen(VALGRINDCHECK_ALLOC_FILENAME_STR, "w");
-        if (!file)
-            perror("valgrindcheck could not open file: ");
-        fprintf(file, "%d", should_fail_at + 1);
-        fclose(file);
+        int fd = open(VALGRINDCHECK_ALLOC_FILENAME_STR, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+        if (fd < 0) {
+            write(2, "valgrindcheck could not open file: ", strlen("valgrindcheck could not open file: "));
+            write(2, strerror(errno), strlen(strerror(errno)));
+        }
+        write(fd, &should_fail_at, sizeof(should_fail_at));
+        close(fd);
     }
 
     if (counter++ == should_fail_at)
