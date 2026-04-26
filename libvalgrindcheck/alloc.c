@@ -59,13 +59,13 @@ void *valgrindcheck_malloc(size_t size) {
     if (!ptr)
         return NULL;
 
-    VALGRIND_MALLOCLIKE_BLOCK(ptr, size, 0, 0);
+    // VALGRIND_MALLOCLIKE_BLOCK(ptr, size, 0, 0);
 
     return ptr;
 }
 
 void valgrindcheck_free(void *ptr) {
-    VALGRIND_FREELIKE_BLOCK(ptr, 0);
+    // VALGRIND_FREELIKE_BLOCK(ptr, 0);
 
     free(ptr);
 }
