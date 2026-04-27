@@ -11,6 +11,9 @@
 #include <sys/wait.h>
 
 namespace vcheck {
+    Process::Process(const arglist &args, const Env &env): args(args), env(env), pid{}, wstatus{} {
+    }
+
     void Process::start() {
         char **argv = new char*[args.size() + 1];
         auto raw_env = this->env.getenv();
@@ -22,7 +25,7 @@ namespace vcheck {
         }
 
         if (posix_spawn(&pid, argv[0], nullptr, nullptr, argv, raw_env))
-            throw std::runtime_error("posix_spawn failed");
+            throw std::runtime_error("posix_spawn failed: " + std::string(strerror(errno)));
 
         delete [] argv;
         for (auto iter = raw_env; *iter != nullptr; ++iter)
@@ -31,7 +34,11 @@ namespace vcheck {
     }
 
     void Process::wait() {
-        if (waitpid(pid, &status, 0) < 0)
+        if (waitpid(pid, &wstatus.status, 0) < 0)
             throw std::runtime_error("waitpid failed");
+    }
+
+    ProcessStatus Process::status() const {
+        return ProcessStatus{wstatus};
     }
 } // vcheck

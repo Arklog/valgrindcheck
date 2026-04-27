@@ -8,7 +8,9 @@
 #include <string>
 #include <unordered_map>
 
+extern "C" {
 extern char **environ;
+}
 
 namespace vcheck {
     class Env {

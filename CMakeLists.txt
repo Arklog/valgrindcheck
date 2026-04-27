@@ -16,7 +16,9 @@ add_executable(valgrindcheck_bin
         valgrindcheck/Env.cpp
         valgrindcheck/Env.hpp
         valgrindcheck/Process.cpp
-        valgrindcheck/Process.hpp)
+        valgrindcheck/Process.hpp
+        valgrindcheck/ProcessStatus.cpp
+        valgrindcheck/ProcessStatus.hpp)
 target_include_directories(valgrindcheck_bin PUBLIC valgrindcheck)
 
 enable_testing()

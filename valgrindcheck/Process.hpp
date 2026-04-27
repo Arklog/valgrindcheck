@@ -8,10 +8,10 @@
 #include <string>
 #include <vector>
 
+#include "ProcessStatus.hpp"
+#include "Env.hpp"
 
 namespace vcheck {
-    class Env;
-
     class Process {
     public:
         using arglist = std::vector<std::string>;
@@ -21,11 +21,13 @@ namespace vcheck {
         void start();
 
         void wait();
+
+        ProcessStatus status() const;
     private:
-        const arglist &args;
-        const Env &env;
+        const arglist args;
+        const Env env;
         pid_t     pid;
-        int       status;
+        ProcessStatus wstatus;
     };
 } // vcheck
 
