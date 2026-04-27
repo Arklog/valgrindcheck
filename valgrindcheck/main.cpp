@@ -26,7 +26,7 @@ struct settings {
 
     settings() {
         count_filename       = "count.bin";
-        concurrent_processes = 5;
+        concurrent_processes = 20;
         valgrind_exitcode    = 42;
     }
 };
@@ -64,12 +64,17 @@ int main(int argc, char **argv) {
         processes.push_back(child);
     }
 
-    indicators::ProgressBar progress_bar{};
+    indicators::ProgressBar progress_bar{
+        indicators::option::MaxProgress{processes.size()},
+        indicators::option::ShowPercentage{true},
+        indicators::option::ShowRemainingTime{true}
+    };
+
     vcheck::ProcessPool pool{processes, s.concurrent_processes, [&progress_bar, &processes](vcheck::Process &process) {
         static int n = 0;
         auto current = static_cast<float>(++n);
         auto max = static_cast<float>(processes.size());
-        progress_bar.set_progress((current / max) * 100.0f);
+        progress_bar.tick();
     }};
 
     pool.run();
