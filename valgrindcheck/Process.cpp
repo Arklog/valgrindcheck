@@ -29,7 +29,7 @@ namespace vcheck {
 
         delete [] argv;
         for (auto iter = raw_env; *iter != nullptr; ++iter)
-            delete *iter;
+            delete [] *iter;
         delete [] raw_env;
     }
 
@@ -38,7 +38,11 @@ namespace vcheck {
             throw std::runtime_error("waitpid failed");
     }
 
-    ProcessStatus Process::status() const {
-        return ProcessStatus{wstatus};
+    pid_t Process::getPid() const {
+        return pid;
+    }
+
+    ProcessStatus &Process::status() {
+        return wstatus;
     }
 } // vcheck

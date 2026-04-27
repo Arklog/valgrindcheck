@@ -2,6 +2,9 @@
 
 #include "Env.hpp"
 #include "Process.hpp"
+#include <indicators/progress_bar.hpp>
+
+#include "ProcessPool.hpp"
 
 extern "C" {
 #include <unistd.h>
@@ -18,9 +21,13 @@ const vcheck::Process::arglist valgrind_args = {
 
 struct settings {
     std::string count_filename;
+    size_t      concurrent_processes;
+    int         valgrind_exitcode;
 
     settings() {
-        count_filename = "count.bin";
+        count_filename       = "count.bin";
+        concurrent_processes = 5;
+        valgrind_exitcode    = 42;
     }
 };
 
@@ -55,19 +62,28 @@ int main(int argc, char **argv) {
         child_env.setenv("VALGRINDCHECK_FAIL_AT", std::to_string(n).c_str());
         vcheck::Process child{child_args, child_env};
         processes.push_back(child);
-        child.start();
     }
 
-    size_t n = 0;
-    for (auto &p : processes) {
-        p.wait();
-        auto status = p.status();
+    indicators::ProgressBar progress_bar{};
+    vcheck::ProcessPool pool{processes, s.concurrent_processes, [&progress_bar, &processes](vcheck::Process &process) {
+        static int n = 0;
+        auto current = static_cast<float>(++n);
+        auto max = static_cast<float>(processes.size());
+        progress_bar.set_progress((current / max) * 100.0f);
+    }};
+
+    pool.run();
+
+    i = 0;
+    for (auto &process : processes) {
+        auto status = process.status();
 
         if (status.exited() && status.exit_code() == 42) {
-            std::cout << "Test failed at " << n << std::endl;
+            std::cout << "process: " << i << std::endl;
         }
-        ++n;
+        ++i;
     }
+
 
     return 0;
 }

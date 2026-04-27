@@ -22,12 +22,15 @@ namespace vcheck {
 
         void wait();
 
-        ProcessStatus status() const;
+        pid_t getPid() const;
+
+        ProcessStatus &status();
+
     private:
-        const arglist args;
-        const Env env;
-        pid_t     pid;
-        ProcessStatus wstatus;
+        const arglist                                 args;
+        const Env                                     env;
+        pid_t                                         pid;
+        ProcessStatus                                 wstatus;
     };
 } // vcheck
 
