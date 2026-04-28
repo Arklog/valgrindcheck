@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     env.setenv("VALGRINDCHECK_COUNT", "1");
     env.setenv("VALGRINDCHECK_COUNT_FILENAME", "count.bin");
 
-    vcheck::Process process{s.child_args, env};
+    vcheck::Process process{s.child_args, env, 0};
     process.start();
     process.wait();
 
