@@ -12,8 +12,15 @@ fetchcontent_declare(
         GIT_TAG v2.3
 )
 
+FetchContent_Declare(
+        argparse
+        GIT_REPOSITORY https://github.com/Taywee/args
+        GIT_TAG 6.4.12
+)
+
 fetchcontent_makeavailable(
         indicators
+        argparse
 )
 
 add_library(valgrindcheck STATIC
@@ -32,7 +39,7 @@ add_executable(valgrindcheck_bin
         valgrindcheck/ProcessPool.cpp
         valgrindcheck/ProcessPool.hpp)
 target_include_directories(valgrindcheck_bin PUBLIC valgrindcheck)
-target_link_libraries(valgrindcheck_bin PRIVATE indicators)
+target_link_libraries(valgrindcheck_bin PRIVATE indicators taywee::args)
 
 enable_testing()
 add_subdirectory(tests)
