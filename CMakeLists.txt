@@ -24,9 +24,12 @@ fetchcontent_makeavailable(
 )
 
 add_library(valgrindcheck STATIC
-        libvalgrindcheck/alloc.c
-        libvalgrindcheck/alloc.h)
-target_include_directories(valgrindcheck PUBLIC . )
+        libvalgrindcheck/alloc.c)
+target_sources(valgrindcheck PUBLIC
+        FILE_SET HEADERS
+        BASE_DIRS libvalgrindcheck
+        FILES libvalgrindcheck/alloc.h)
+target_include_directories(valgrindcheck PUBLIC .)
 
 add_executable(valgrindcheck_bin
         valgrindcheck/main.cpp
@@ -40,6 +43,9 @@ add_executable(valgrindcheck_bin
         valgrindcheck/ProcessPool.hpp)
 target_include_directories(valgrindcheck_bin PUBLIC valgrindcheck)
 target_link_libraries(valgrindcheck_bin PRIVATE indicators taywee::args)
+
+install(TARGETS valgrindcheck valgrindcheck_bin
+        FILE_SET HEADERS DESTINATION include/libvalgrindcheck)
 
 enable_testing()
 add_subdirectory(tests)
