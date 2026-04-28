@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
         child_args.insert_range(child_args.end(), s.child_args);
 
         child_env.setenv("VALGRINDCHECK_FAIL_AT", std::to_string(n).c_str());
-        vcheck::Process child{child_args, child_env};
+        vcheck::Process child{child_args, child_env, n};
         processes.push_back(child);
     }
 
@@ -92,27 +92,22 @@ int main(int argc, char **argv) {
         indicators::option::ShowRemainingTime{true}
     };
 
-    vcheck::ProcessPool pool{
-        processes, s.concurrent_processes, [&progress_bar, &processes](vcheck::Process &process) {
-            static int n       = 0;
-            auto       current = static_cast<float>(++n);
-            auto       max     = static_cast<float>(processes.size());
+    std::vector<decltype(processes)::iterator> failed_processes;
+    vcheck::ProcessPool                        pool{
+        processes, s.concurrent_processes,
+        [&progress_bar, &failed_processes, &s](decltype(processes)::iterator process) {
+            static int n = 0;
             progress_bar.tick();
+            if (process->status().exited() && process->status().exit_code() == s.valgrind_exitcode)
+                failed_processes.push_back(process);
         }
     };
 
     pool.run();
 
-    i = 0;
-    for (auto &process: processes) {
-        auto status = process.status();
-
-        if (status.exited() && status.exit_code() == s.valgrind_exitcode) {
-            std::cout << "process: " << i << std::endl;
-        }
-        ++i;
+    for (auto process: failed_processes) {
+        std::cout << "leak detected: " << process->getValgrindcheckId() << std::endl;
     }
 
-
-    return 0;
+    return failed_processes.empty() ? 0 : 1;
 }

@@ -11,17 +11,18 @@
 #include <sys/wait.h>
 
 namespace vcheck {
-    Process::Process(const arglist &args, const Env &env): args(args), env(env), pid{}, wstatus{} {
+    Process::Process(const arglist &args, const Env &env, int valgrindcheck_id) : args(args), env(env),
+        valgrindcheck_id{valgrindcheck_id}, pid{}, wstatus{} {
     }
 
     void Process::start() {
-        char **argv = new char*[args.size() + 1];
-        auto raw_env = this->env.getenv();
-        memset(argv, 0, sizeof(char*) * (args.size() + 1));
+        char **argv    = new char *[args.size() + 1];
+        auto   raw_env = this->env.getenv();
+        memset(argv, 0, sizeof(char *) * (args.size() + 1));
 
         size_t i = 0;
-        for (const auto& arg : args) {
-            argv[i++] = const_cast<char*>(arg.c_str());
+        for (const auto &arg: args) {
+            argv[i++] = const_cast<char *>(arg.c_str());
         }
 
         if (posix_spawn(&pid, argv[0], nullptr, nullptr, argv, raw_env))
@@ -44,5 +45,9 @@ namespace vcheck {
 
     ProcessStatus &Process::status() {
         return wstatus;
+    }
+
+    int Process::getValgrindcheckId() const {
+        return valgrindcheck_id;
     }
 } // vcheck

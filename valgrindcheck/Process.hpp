@@ -16,7 +16,7 @@ namespace vcheck {
     public:
         using arglist = std::vector<std::string>;
 
-        Process(const arglist &args, const Env& env);
+        Process(const arglist &args, const Env &env, int valgrindcheck_id);
 
         void start();
 
@@ -26,11 +26,14 @@ namespace vcheck {
 
         ProcessStatus &status();
 
+        int getValgrindcheckId() const;
+
     private:
-        const arglist                                 args;
-        const Env                                     env;
-        pid_t                                         pid;
-        ProcessStatus                                 wstatus;
+        const arglist args;
+        const Env     env;
+        pid_t         pid;
+        ProcessStatus wstatus;
+        int           valgrindcheck_id;
     };
 } // vcheck
 

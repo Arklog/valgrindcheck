@@ -13,17 +13,21 @@
 namespace vcheck {
     class ProcessPool {
     public:
-        using process_list = std::vector<Process>;
-        ProcessPool(process_list &processes, size_t concurrent_processes, const std::optional<std::function<void (Process &)>> & = {});
+        using process_list  = std::vector<Process>;
+        using callback_type = std::function<void (process_list::iterator)>;
+
+        ProcessPool(process_list &processes, size_t concurrent_processes,
+                    const std::optional<callback_type> & = {});
 
         void run();
+
     private:
         using process_lookup = std::unordered_map<pid_t, process_list::iterator>;
 
-        process_list &processes;
-        process_lookup process_map;
-        size_t concurrent_processes;
-        std::optional<std::function<void (Process&)>> callback;
+        process_list &               processes;
+        process_lookup               process_map;
+        size_t                       concurrent_processes;
+        std::optional<callback_type> callback;
 
         void wait_for_process();
     };

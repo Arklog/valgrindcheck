@@ -7,7 +7,10 @@
 #include <sys/wait.h>
 
 namespace vcheck {
-    ProcessPool::ProcessPool(process_list &processes, size_t concurrent_processes, const std::optional<std::function<void (Process&)>> &callback): processes{processes}, concurrent_processes(concurrent_processes), process_map{}, callback(callback) {
+    ProcessPool::ProcessPool(process_list &                      processes, size_t concurrent_processes,
+                             const std::optional<callback_type> &callback) : processes{processes},
+                                                                             concurrent_processes(concurrent_processes),
+                                                                             process_map{}, callback(callback) {
         processes.reserve(concurrent_processes);
     }
 
@@ -29,15 +32,15 @@ namespace vcheck {
 
     void ProcessPool::wait_for_process() {
         while (!process_map.empty()) {
-            int status;
+            int  status;
             auto pid = waitpid(0, &status, 0);
 
             if (process_map.contains(pid)) {
-                auto process = process_map[pid];
+                auto process             = process_map[pid];
                 process->status().status = status;
 
                 if (callback.has_value())
-                    callback.value()(*process);
+                    callback.value()(process);
                 process_map.erase(pid);
                 break;
             }
