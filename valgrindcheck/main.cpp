@@ -1,4 +1,6 @@
 #include <iostream>
+#include <filesystem>
+#include <stdexcept>
 
 #include "Env.hpp"
 #include "Process.hpp"
@@ -22,12 +24,14 @@ vcheck::Process::arglist valgrind_args = {
 
 struct settings {
     std::string              count_filename;
+    std::string              log_directory;
     size_t                   concurrent_processes;
     int                      valgrind_exitcode;
     vcheck::Process::arglist child_args;
 
     settings() : child_args{} {
         count_filename       = "count.bin";
+        log_directory        = ".";
         concurrent_processes = 20;
         valgrind_exitcode    = 42;
     }
@@ -41,6 +45,7 @@ static void parse_args(int argc, char **argv, settings &s) {
                                                  "Maximum number of concurrent processes",
                                                  {'c', "concurrent"}, 10);
     args::ValueFlag<int> valgrind_exitcode(parser, "valgrind_exitcode", "Valgrind exit code", {'e', "exitcode"}, 42);
+    args::ValueFlag<std::string> log_directory(parser, "log_directory", "Directory for valgrind log files", {'l', "log-dir"}, ".");
     args::PositionalList<std::string> child_args(parser, "COMMAND", "The program to check");
 
     try {
@@ -52,6 +57,7 @@ static void parse_args(int argc, char **argv, settings &s) {
 
     s.concurrent_processes = args::get(concurrent_processes);
     s.valgrind_exitcode    = args::get(valgrind_exitcode);
+    s.log_directory        = args::get(log_directory);
     s.child_args           = args::get(child_args);
 }
 
@@ -75,10 +81,15 @@ int main(int argc, char **argv) {
 
     vcheck::Env                  child_env{};
     std::vector<vcheck::Process> processes;
+    const std::filesystem::path  log_directory{s.log_directory};
+
+    if (std::filesystem::exists(log_directory) && !std::filesystem::is_directory(log_directory))
+        throw std::runtime_error("log output path is not a directory: " + log_directory.string());
+    std::filesystem::create_directories(log_directory);
 
     for (int n = 0; n < i; ++n) {
         auto child_args = valgrind_args;
-        child_args.push_back("--log-file=" + std::to_string(n) + ".log");
+        child_args.push_back("--log-file=" + (log_directory / (std::to_string(n) + ".log")).string());
         child_args.insert_range(child_args.end(), s.child_args);
 
         child_env.setenv("VALGRINDCHECK_FAIL_AT", std::to_string(n).c_str());
