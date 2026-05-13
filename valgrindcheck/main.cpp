@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
     for (int n = 0; n < i; ++n) {
         auto child_args = valgrind_args;
         child_args.push_back("--log-file=" + (log_directory / (std::to_string(n) + ".log")).string());
-        child_args.insert_range(child_args.end(), s.child_args);
+        child_args.insert(child_args.end(), s.child_args.begin(), s.child_args.end());
 
         child_env.setenv("VALGRINDCHECK_FAIL_AT", std::to_string(n).c_str());
         vcheck::Process child{child_args, child_env, n};
