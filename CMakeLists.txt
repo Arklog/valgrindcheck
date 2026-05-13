@@ -18,9 +18,16 @@ FetchContent_Declare(
         GIT_TAG 6.4.12
 )
 
+FetchContent_Declare(
+        spdlog
+        GIT_REPOSITORY https://github.com/gabime/spdlog
+        GIT_TAG v1.15.3
+)
+
 fetchcontent_makeavailable(
         indicators
         argparse
+        spdlog
 )
 
 add_library(valgrindcheck STATIC
@@ -42,7 +49,7 @@ add_executable(valgrindcheck_bin
         valgrindcheck/ProcessPool.cpp
         valgrindcheck/ProcessPool.hpp)
 target_include_directories(valgrindcheck_bin PUBLIC valgrindcheck)
-target_link_libraries(valgrindcheck_bin PRIVATE indicators taywee::args)
+target_link_libraries(valgrindcheck_bin PRIVATE indicators taywee::args spdlog::spdlog)
 
 install(TARGETS valgrindcheck valgrindcheck_bin
         FILE_SET HEADERS DESTINATION include/libvalgrindcheck)

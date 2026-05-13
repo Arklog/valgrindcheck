@@ -1,6 +1,7 @@
 #include <iostream>
 #include <filesystem>
 #include <stdexcept>
+#include <spdlog/spdlog.h>
 
 #include "Env.hpp"
 #include "Process.hpp"
@@ -45,7 +46,8 @@ static void parse_args(int argc, char **argv, settings &s) {
                                                  "Maximum number of concurrent processes",
                                                  {'c', "concurrent"}, 10);
     args::ValueFlag<int> valgrind_exitcode(parser, "valgrind_exitcode", "Valgrind exit code", {'e', "exitcode"}, 42);
-    args::ValueFlag<std::string> log_directory(parser, "log_directory", "Directory for valgrind log files", {'l', "log-dir"}, ".");
+    args::ValueFlag<std::string> log_directory(parser, "log_directory", "Directory for valgrind log files",
+                                               {'l', "log-dir"}, ".");
     args::PositionalList<std::string> child_args(parser, "COMMAND", "The program to check");
 
     try {
@@ -66,6 +68,7 @@ int main(int argc, char **argv) {
     settings    s;
     parse_args(argc, argv, s);
 
+    spdlog::info("counting number of run");
     valgrind_args.push_back("--error-exitcode=" + std::to_string(s.valgrind_exitcode));
     env.setenv("VALGRINDCHECK_COUNT", "1");
     env.setenv("VALGRINDCHECK_COUNT_FILENAME", "count.bin");
@@ -78,6 +81,9 @@ int main(int argc, char **argv) {
     int fd = open(s.count_filename.c_str(), O_RDONLY);
     read(fd, &i, sizeof(i));
     close(fd);
+
+    spdlog::info("running {} child processes", i);
+    spdlog::info("will run {} process at a time", s.concurrent_processes);
 
     vcheck::Env                  child_env{};
     std::vector<vcheck::Process> processes;
@@ -111,13 +117,15 @@ int main(int argc, char **argv) {
             progress_bar.tick();
             if (process->status().exited() && process->status().exit_code() == s.valgrind_exitcode)
                 failed_processes.push_back(process);
+            spdlog::info("valgrindcheck: process {} finished with exit code {}", process->getValgrindcheckId(),
+                         process->status().exit_code());
         }
     };
 
     pool.run();
 
     for (auto process: failed_processes) {
-        std::cout << "leak detected: " << process->getValgrindcheckId() << std::endl;
+        spdlog::info("valgrindcheck: leak detected: {}", process->getValgrindcheckId());
     }
 
     return failed_processes.empty() ? 0 : 1;
