@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.2)
+cmake_minimum_required(VERSION 3.2)
 project(valgrindcheck C CXX)
 
 set(CMAKE_C_STANDARD 17)
