@@ -32,10 +32,6 @@ fetchcontent_makeavailable(
 
 add_library(valgrindcheck STATIC
         libvalgrindcheck/alloc.c)
-target_sources(valgrindcheck PUBLIC
-        FILE_SET HEADERS
-        BASE_DIRS libvalgrindcheck
-        FILES libvalgrindcheck/alloc.h)
 target_include_directories(valgrindcheck PUBLIC .)
 
 add_executable(valgrindcheck_bin
