@@ -51,8 +51,8 @@ add_executable(valgrindcheck_bin
 target_include_directories(valgrindcheck_bin PUBLIC valgrindcheck)
 target_link_libraries(valgrindcheck_bin PRIVATE indicators taywee::args spdlog::spdlog)
 
-install(TARGETS valgrindcheck valgrindcheck_bin
-        FILE_SET HEADERS DESTINATION include/libvalgrindcheck)
+#install(TARGETS valgrindcheck valgrindcheck_bin
+#        FILE_SET HEADERS DESTINATION include/libvalgrindcheck)
 
 enable_testing()
 add_subdirectory(tests)
